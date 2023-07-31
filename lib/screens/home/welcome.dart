@@ -8,7 +8,6 @@ import 'dart:ui' as ui; // import dart:ui with a prefix
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/services.dart';
-import 'package:firebase_phone_auth_handler/firebase_phone_auth_handler.dart';
 import 'dart:async';
 
 class welcome extends StatefulWidget {

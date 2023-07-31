@@ -43,7 +43,7 @@ dependencies:
   cloud_firestore: ^4.8.3
   get: ^4.6.5
   path: ^1.8.2
-  firebase_phone_auth_handler: ^1.0.8
+  modal_progress_hud_nsn: ^0.1.0-nullsafety-0
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -60,7 +60,8 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-
+ 
+  
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
