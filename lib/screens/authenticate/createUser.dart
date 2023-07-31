@@ -15,7 +15,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:flutter/services.dart';
 import '../widgets/widgets.dart';
-import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 
 class CreateUser extends StatefulWidget {
   const CreateUser({Key? key}) : super(key: key);
@@ -34,7 +33,8 @@ class _CreateUserState extends State<CreateUser>
   TextEditingController password = TextEditingController();
   XFile? _image;
   final storage = FirebaseStorage.instance;
-  bool _saving = false;
+  bool _isLoading = false;
+
   @override
   void initState() {
     super.initState();
@@ -49,6 +49,15 @@ class _CreateUserState extends State<CreateUser>
 
   @override
   Widget build(BuildContext context) {
+     Future<void> _navigateToChatScreen() async {
+    // Simulate a delay for demonstration purposes.
+    await Future.delayed(Duration(seconds: 3));
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) =>chat_screen()),
+    );
+  }
     return MaterialApp(
       theme: ThemeData(
         primaryColor: pink,
@@ -56,160 +65,152 @@ class _CreateUserState extends State<CreateUser>
       debugShowCheckedModeBanner: false,
       home: SafeArea(
         child: Scaffold(
-          body: ModalProgressHUD(
-            inAsyncCall: _saving,
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Text(
-                    'Create Your Account',
-                    style: TextStyle(
-                        fontFamily: 'Rubik', fontSize: 45, color: blue),
-                  ),
+          body: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Text(
+                  'Create Your Account',
+                  style:
+                      TextStyle(fontFamily: 'Rubik', fontSize: 45, color: blue),
                 ),
-                Stack(
-                  children: [
-                    CircleAvatar(
-                      backgroundImage: _image != null
-                          ? FileImage(File(_image!.path))
-                              as ImageProvider<Object>
-                          : AssetImage('images/avatar.png'),
-                      radius: 64,
+              ),
+              Stack(
+                children: [
+                  CircleAvatar(
+                    backgroundImage: _image != null
+                        ? FileImage(File(_image!.path)) as ImageProvider<Object>
+                        : AssetImage('images/avatar.png'),
+                    radius: 64,
+                  ),
+                  Positioned(
+                    child: IconButton(
+                      onPressed: pickImage,
+                      icon: const Icon(Icons.add_a_photo),
                     ),
-                    Positioned(
-                      child: IconButton(
-                        onPressed: pickImage,
-                        icon: const Icon(Icons.add_a_photo),
+                    bottom: -10,
+                    left: 80,
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 30,
+              ),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: TextField(
+                          controller: email,
+                          decoration: InputDecoration(
+                            prefixIcon: Icon(
+                              Icons.email,
+                              color: pink,
+                            ),
+                            labelText: 'email',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(
+                                color: pink,
+                                width: 2,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(
+                                color: blue,
+                                width: 4,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
-                      bottom: -10,
-                      left: 80,
-                    ),
-                  ],
-                ),
-                SizedBox(
-                  height: 30,
-                ),
-                Flexible(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: TextField(
-                            controller: email,
-                            decoration: InputDecoration(
-                              prefixIcon: Icon(
-                                Icons.email,
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: TextField(
+                          obscureText: true,
+                          controller: password,
+                          decoration: InputDecoration(
+                            prefixIcon: Icon(
+                              Icons.lock,
+                              color: pink,
+                            ),
+                            labelText: 'password',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(
                                 color: pink,
+                                width: 2,
                               ),
-                              labelText: 'email',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(
-                                  color: pink,
-                                  width: 2,
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(
-                                  color: blue,
-                                  width: 4,
-                                ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(
+                                color: blue,
+                                width: 4,
                               ),
                             ),
                           ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: TextField(
-                            obscureText: true,
-                            controller: password,
-                            decoration: InputDecoration(
-                              prefixIcon: Icon(
-                                Icons.lock,
-                                color: pink,
-                              ),
-                              labelText: 'password',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(
-                                  color: pink,
-                                  width: 2,
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(
-                                  color: blue,
-                                  width: 4,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 20),
-                        Builder(builder: (BuildContext context) {
-                          return ElevatedButton(
-                            onPressed: () async {
-                              setState(() {
-                                _saving = true;
-                              });
-                              try {
-                                var userCreate =
-                                    await auth.createUserWithEmailAndPassword(
-                                        email: email.text,
-                                        password: password.text);
-                                var userSignIn =
-                                    await auth.signInWithEmailAndPassword(
-                                        email: email.text,
-                                        password: password.text);
+                      ),
+                      SizedBox(height: 20),
+                      Builder(builder: (BuildContext context) {
+                        return ElevatedButton(
+                          onPressed: () async {
+                           
+                            try {
+                              var userCreate =
+                                  await auth.createUserWithEmailAndPassword(
+                                      email: email.text,
+                                      password: password.text);
+                              var userSignIn =
+                                  await auth.signInWithEmailAndPassword(
+                                      email: email.text,
+                                      password: password.text);
 
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => chat_screen(),
-                                  ),
-                                );
-                                setState(() {
-                                  _saving = false;
-                                });
-                                uploadAvatar();
-                              } catch (e) {
-                                print(e);
-                              }
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 5,
-                                horizontal: 100,
-                              ),
-                              child: Text(
-                                'Create Account',
-                                style: TextStyle(fontFamily: 'Rubik'),
-                              ),
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => chat_screen(),
+                                ),
+                              );
+                             
+                              uploadAvatar();
+                            } catch (e) {
+                              print(e);
+                            }
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 5,
+                              horizontal: 100,
                             ),
-                            style: ElevatedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(5),
-                              ),
-                              backgroundColor: pink,
+                            child: Text(
+                              'Create Account',
+                              style: TextStyle(fontFamily: 'Rubik'),
                             ),
-                          );
-                        }),
-                      ],
-                    ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                            backgroundColor: pink,
+                          ),
+                        );
+                      }),
+                    ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
