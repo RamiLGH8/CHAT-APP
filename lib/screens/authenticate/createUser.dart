@@ -2,18 +2,14 @@ import 'dart:ffi';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:chat_app/screens/home/chat_screen.dart';
-import '../widgets/styles.dart';
 import 'package:flutter/material.dart';
-import 'dart:ui' as ui;
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
-import 'package:path/path.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:get/get.dart';
-import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:ui' as ui;
+
+import '../widgets/styles.dart';
 import '../widgets/widgets.dart';
 
 class CreateUser extends StatefulWidget {
@@ -47,17 +43,19 @@ class _CreateUserState extends State<CreateUser>
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-     Future<void> _navigateToChatScreen() async {
+  Future<void> _navigateToChatScreen() async {
     // Simulate a delay for demonstration purposes.
     await Future.delayed(Duration(seconds: 3));
 
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) =>chat_screen()),
+      MaterialPageRoute(
+          builder: (context) =>
+              chat_screen()), // Use PascalCase for class names
     );
   }
+
+  Widget _buildDefaultUI(double width) {
     return MaterialApp(
       theme: ThemeData(
         primaryColor: pink,
@@ -71,8 +69,11 @@ class _CreateUserState extends State<CreateUser>
                 padding: const EdgeInsets.all(20.0),
                 child: Text(
                   'Create Your Account',
-                  style:
-                      TextStyle(fontFamily: 'Rubik', fontSize: 45, color: blue),
+                  style: TextStyle(
+                    fontFamily: 'Rubik',
+                    fontSize: 45,
+                    color: blue,
+                  ),
                 ),
               ),
               Stack(
@@ -93,9 +94,7 @@ class _CreateUserState extends State<CreateUser>
                   ),
                 ],
               ),
-              SizedBox(
-                height: 30,
-              ),
+              SizedBox(height: 30),
               Flexible(
                 child: SingleChildScrollView(
                   child: Column(
@@ -162,50 +161,47 @@ class _CreateUserState extends State<CreateUser>
                         ),
                       ),
                       SizedBox(height: 20),
-                      Builder(builder: (BuildContext context) {
-                        return ElevatedButton(
-                          onPressed: () async {
-                           
-                            try {
-                              var userCreate =
-                                  await auth.createUserWithEmailAndPassword(
-                                      email: email.text,
-                                      password: password.text);
-                              var userSignIn =
-                                  await auth.signInWithEmailAndPassword(
-                                      email: email.text,
-                                      password: password.text);
+                      ElevatedButton(
+                        onPressed: () async {
+                          try {
+                            var userCreate =
+                                await auth.createUserWithEmailAndPassword(
+                              email: email.text,
+                              password: password.text,
+                            );
+                            var userSignIn =
+                                await auth.signInWithEmailAndPassword(
+                              email: email.text,
+                              password: password.text,
+                            );
+                              setState(() {
+                                _isLoading = true;
+                              });
+                           await _navigateToChatScreen();
 
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => chat_screen(),
-                                ),
-                              );
-                             
-                              uploadAvatar();
-                            } catch (e) {
-                              print(e);
-                            }
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 5,
-                              horizontal: 100,
-                            ),
-                            child: Text(
-                              'Create Account',
-                              style: TextStyle(fontFamily: 'Rubik'),
-                            ),
+
+                            uploadAvatar();
+                          } catch (e) {
+                            print(e);
+                          }
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 5,
+                            horizontal: 100,
                           ),
-                          style: ElevatedButton.styleFrom(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(5),
-                            ),
-                            backgroundColor: pink,
+                          child: Text(
+                            'Create Account',
+                            style: TextStyle(fontFamily: 'Rubik'),
                           ),
-                        );
-                      }),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          backgroundColor: pink,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -215,6 +211,17 @@ class _CreateUserState extends State<CreateUser>
         ),
       ),
     );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final width_device = ui.window.physicalSize.width;
+    return _isLoading
+        ? LoadingPage()
+        : MaterialApp(
+            debugShowCheckedModeBanner: false,
+            home: _buildDefaultUI(width_device),
+          );
   }
 
   pickImage() async {

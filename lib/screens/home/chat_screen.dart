@@ -1,4 +1,5 @@
 import 'dart:ffi';
+import 'package:chat_app/screens/authenticate/signIn.dart';
 import 'package:chat_app/screens/home/friend_chat_screen.dart';
 import 'package:chat_app/screens/widgets/widgets.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -10,8 +11,8 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class chat_screen extends StatefulWidget {
-  const chat_screen({Key? key});
-
+  chat_screen({Key? key, });
+  
   @override
   State<chat_screen> createState() => _chat_screenState();
 }
@@ -42,7 +43,9 @@ class _chat_screenState extends State<chat_screen> {
       debugShowCheckedModeBanner: false, // set to false to remove debug banner
       home: SafeArea(
           child: Scaffold(
-        appBar: AppBar(title: Text('Chat'), actions: [
+        appBar: AppBar(
+          backgroundColor: pink,
+          title: Text('Chat',style: TextStyle(fontFamily: 'Rubik'),), actions: [
           PopupMenuButton(
               // add icon, by default "3 dot" icon
               // icon: Icon(Icons.book)
@@ -50,14 +53,23 @@ class _chat_screenState extends State<chat_screen> {
             return [
               PopupMenuItem<int>(
                 value: 0,
-                child: Text("Logout"),
+                child: Text("Logout",style: TextStyle(
+                  color: blue,
+                  fontFamily: 'Rubik'
+                ),),
               ),
             ];
           }, onSelected: (value) {
             if (value == 0) {
               print("logout is selected.");
               _auth.signOut();
-              Navigator.pop(context);
+            
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SignIn(),
+                ),
+              );
             }
           }),
         ]),

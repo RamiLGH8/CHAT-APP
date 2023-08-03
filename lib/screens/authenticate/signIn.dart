@@ -10,7 +10,7 @@ import '../widgets/styles.dart';
 
 class SignIn extends StatefulWidget {
   SignIn({Key? key}) : super(key: key);
-
+  
   @override
   State<SignIn> createState() => _SignInState();
 }
@@ -55,11 +55,16 @@ class _SignInState extends State<SignIn> with SingleTickerProviderStateMixin {
   Future<void> _navigateToChatScreen() async {
     // Simulate a delay for demonstration purposes.
     await Future.delayed(Duration(seconds: 3));
-
+                        
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) =>chat_screen()),
+      
+      MaterialPageRoute(
+          builder: (context) => chat_screen(
+                
+              )),
     );
+                         
   }
 
   Widget _buildDefaultUI(double width) {
@@ -190,9 +195,11 @@ class _SignInState extends State<SignIn> with SingleTickerProviderStateMixin {
                               setState(() {
                                 _isLoading = true;
                               });
+                            
                               await _navigateToChatScreen();
-                              
+                                
                             } catch (e) {
+
                               print(e);
                             }
                           },
