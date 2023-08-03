@@ -27,10 +27,11 @@ class _CreateUserState extends State<CreateUser>
   final auth = FirebaseAuth.instance;
   TextEditingController email = TextEditingController();
   TextEditingController password = TextEditingController();
+  TextEditingController user_name = TextEditingController();
   XFile? _image;
   final storage = FirebaseStorage.instance;
   bool _isLoading = false;
-
+  final _firestore = FirebaseFirestore.instance;
   @override
   void initState() {
     super.initState();
@@ -160,6 +161,37 @@ class _CreateUserState extends State<CreateUser>
                           ),
                         ),
                       ),
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: TextField(
+                          
+                          controller: user_name,
+                          decoration: InputDecoration(
+                            prefixIcon: Icon(
+                              Icons.person,
+                              color: pink,
+                            ),
+                            labelText: 'User Name',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(
+                                color: pink,
+                                width: 2,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(
+                                color: blue,
+                                width: 4,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                       SizedBox(height: 20),
                       ElevatedButton(
                         onPressed: () async {
@@ -174,11 +206,16 @@ class _CreateUserState extends State<CreateUser>
                               email: email.text,
                               password: password.text,
                             );
-                              setState(() {
-                                _isLoading = true;
-                              });
-                           await _navigateToChatScreen();
-
+                            _firestore.collection('User data').doc(email.text).set({
+                              'email':email.text ,
+                              'password': password.text,
+                              'user name':user_name.text, 
+                              
+                            });
+                            setState(() {
+                              _isLoading = true;
+                            });
+                            await _navigateToChatScreen();
 
                             uploadAvatar();
                           } catch (e) {

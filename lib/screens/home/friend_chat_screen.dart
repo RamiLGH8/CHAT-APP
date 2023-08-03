@@ -7,6 +7,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:ui' as ui; // import dart:ui with a prefix
 import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/widgets.dart';
+import 'package:async/async.dart';
+import 'package:rxdart/rxdart.dart';
 
 class friend_chat_screen extends StatefulWidget {
   const friend_chat_screen({super.key});
@@ -23,7 +25,34 @@ class _friend_chat_screenState extends State<friend_chat_screen> {
     late User signedUser;
     String? message;
     final _auth = FirebaseAuth.instance;
-    final _firestore = FirebaseFirestore.instance;
+
+    final senderSnapshots =
+        FirebaseFirestore.instance.collection('User data').snapshots();
+
+    final messagesSnapshots = FirebaseFirestore.instance
+        .collection('User data')
+        .doc(_auth.currentUser!.email)
+        .collection('messages')
+        .snapshots();
+    final combinedSnapshots = Rx.combineLatest2(
+      senderSnapshots,
+      messagesSnapshots,
+      (QuerySnapshot senderSnapshots, QuerySnapshot messagesSnapshots) {
+        return {
+          'senderData': senderSnapshots.docs,
+          'messagesData': messagesSnapshots.docs,
+        };
+      },
+    );
+
+    void messageStream() async {
+      await for (var snapshots in messagesSnapshots) {
+        for (var messages in snapshots.docs) {
+          print(messages.data());
+        }
+      }
+    }
+
     void getCurrentUser() {
       try {
         final user = _auth.currentUser;
@@ -31,15 +60,6 @@ class _friend_chat_screenState extends State<friend_chat_screen> {
         print(signedUser.email);
       } catch (e) {
         print(e);
-      }
-    }
-
-    void messageStream() async {
-      await for (var snapshots
-          in _firestore.collection('messages').snapshots()) {
-        for (var messages in snapshots.docs) {
-          print(messages.data());
-        }
       }
     }
 
@@ -77,20 +97,19 @@ class _friend_chat_screenState extends State<friend_chat_screen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              StreamBuilder<QuerySnapshot>(
-                  stream: _firestore.collection('messages').snapshots(),
+              StreamBuilder<Map<String, List<QueryDocumentSnapshot>>>(
+                  stream: combinedSnapshots,
                   builder: (context, snapshot) {
                     List<Text> messageWidgets = [];
                     if (snapshot.hasData) {
-                      final messages = snapshot.data!.docs!;
-                      for (var message in messages) {
-                        final messageText = message.get('message');
-                        final messageSender = message.get('sender');
-                        final messageWidget =
-                            Text(messageText + ' ' + messageSender);
-                        messageWidgets.add(messageWidget);
-                      }
-                    } 
+                      getCurrentUser();
+                      final sender = snapshot.data!['senderData']!
+                          .firstWhere(
+                              (element) => element.id == signedUser.email)
+                          .get('user name');
+                      final messages = snapshot.data!['messagesData']!;
+                      messageStream();
+                    }
                     return Expanded(
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
@@ -127,10 +146,11 @@ class _friend_chat_screenState extends State<friend_chat_screen> {
                     TextButton(
                       onPressed: () {
                         getCurrentUser();
-                        _firestore.collection('messages').add({
-                          'message': message,
-                          'sender': signedUser.email,
-                        });
+                        FirebaseFirestore.instance
+                            .collection('User data')
+                            .doc(signedUser.email)
+                            .collection('messages')
+                            .add({'message': message});
                       },
                       child: Text('send'),
                       style: TextButton.styleFrom(),
