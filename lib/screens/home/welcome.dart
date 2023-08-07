@@ -26,7 +26,10 @@ class _welcomeState extends State<welcome> {
     late String password;
     
     return MaterialApp(
-      debugShowCheckedModeBanner: false, // set to false to remove debug banner
+      debugShowCheckedModeBanner: false, 
+      theme: ThemeData(
+        primarySwatch: Colors.pink,
+      ),// set to false to remove debug banner
       home: SafeArea(
         child: Scaffold(
           backgroundColor: Color.fromARGB(255, 233, 240, 247),

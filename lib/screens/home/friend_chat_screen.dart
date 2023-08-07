@@ -11,8 +11,9 @@ import 'package:async/async.dart';
 import 'package:rxdart/rxdart.dart';
 
 class friend_chat_screen extends StatefulWidget {
-  const friend_chat_screen({super.key});
-
+  friend_chat_screen({required this.friendName, required this.friendEmail});
+  String friendName;
+  String friendEmail;
   @override
   State<friend_chat_screen> createState() => _friend_chat_screenState();
 }
@@ -22,17 +23,19 @@ class _friend_chat_screenState extends State<friend_chat_screen> {
   Widget build(BuildContext context) {
     final height_device = ui.window.physicalSize.height;
     final width_device = ui.window.physicalSize.width;
-    late User signedUser;
-    String? message;
-    final _auth = FirebaseAuth.instance;
 
+    final _auth = FirebaseAuth.instance;
+    TextEditingController message = TextEditingController();
     final senderSnapshots =
         FirebaseFirestore.instance.collection('User data').snapshots();
 
     final messagesSnapshots = FirebaseFirestore.instance
         .collection('User data')
         .doc(_auth.currentUser!.email)
+        .collection('friends')
+        .doc(widget.friendEmail)
         .collection('messages')
+        .orderBy('time')
         .snapshots();
     final combinedSnapshots = Rx.combineLatest2(
       senderSnapshots,
@@ -45,19 +48,12 @@ class _friend_chat_screenState extends State<friend_chat_screen> {
       },
     );
 
-    void messageStream() async {
-      await for (var snapshots in messagesSnapshots) {
-        for (var messages in snapshots.docs) {
-          print(messages.data());
-        }
-      }
-    }
-
     void getCurrentUser() {
       try {
         final user = _auth.currentUser;
-        if (user != null) signedUser = user;
-        print(signedUser.email);
+        if (user != null) {
+          print(user.email);
+        }
       } catch (e) {
         print(e);
       }
@@ -72,11 +68,14 @@ class _friend_chat_screenState extends State<friend_chat_screen> {
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primarySwatch: Colors.pink,
+      ),
       home: SafeArea(
           child: Scaffold(
         appBar: AppBar(
           backgroundColor: pink,
-          title: Text('Name'),
+          title: Text(widget.friendName),
           actions: [
             TextButton(
                 onPressed: () {
@@ -100,15 +99,33 @@ class _friend_chat_screenState extends State<friend_chat_screen> {
               StreamBuilder<Map<String, List<QueryDocumentSnapshot>>>(
                   stream: combinedSnapshots,
                   builder: (context, snapshot) {
-                    List<Text> messageWidgets = [];
+                    List<Widget> messageWidgets = [];
                     if (snapshot.hasData) {
                       getCurrentUser();
+                      bool isSender;
                       final sender = snapshot.data!['senderData']!
                           .firstWhere(
                               (element) => element.id == signedUser.email)
                           .get('user name');
                       final messages = snapshot.data!['messagesData']!;
-                      messageStream();
+                      for (var message in messages) {
+                        final messageText = message.get('message');
+                        final currentUser = signedUser.email;
+                        if (currentUser == message.get('sender')) {
+                          isSender = true;
+                        } else {
+                          isSender = false;
+                        }
+                        final messageWidget = messageLine(
+                            messageText, sender, widget.friendName, isSender);
+                        messageWidgets.add(messageWidget);
+                      }
+                    } else {
+                      return Center(
+                        child: Center(
+                            child: CircularProgressIndicator(
+                                backgroundColor: pink)),
+                      );
                     }
                     return Expanded(
                       child: Padding(
@@ -132,9 +149,7 @@ class _friend_chat_screenState extends State<friend_chat_screen> {
                   children: [
                     Expanded(
                       child: TextField(
-                        onChanged: (value) {
-                          message = value;
-                        },
+                        controller: message,
                         decoration: InputDecoration(
                           hintText: 'Write your message here...',
                           contentPadding: EdgeInsets.symmetric(
@@ -149,8 +164,28 @@ class _friend_chat_screenState extends State<friend_chat_screen> {
                         FirebaseFirestore.instance
                             .collection('User data')
                             .doc(signedUser.email)
+                            .collection('friends')
+                            .doc(widget.friendEmail)
                             .collection('messages')
-                            .add({'message': message});
+                            .add({
+                          'message': message.text,
+                          'receiver': widget.friendEmail,
+                          'sender': signedUser.email,
+                          'time': FieldValue.serverTimestamp()
+                        });
+                        FirebaseFirestore.instance
+                            .collection('User data')
+                            .doc(widget.friendEmail)
+                            .collection('friends')
+                            .doc(signedUser.email)
+                            .collection('messages')
+                            .add({
+                          'message': message.text,
+                          'receiver': widget.friendEmail,
+                          'sender': signedUser.email,
+                          'time': FieldValue.serverTimestamp()
+                        });
+                        message.clear();
                       },
                       child: Text('send'),
                       style: TextButton.styleFrom(),

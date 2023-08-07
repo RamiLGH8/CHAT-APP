@@ -58,8 +58,10 @@ class _CreateUserState extends State<CreateUser>
 
   Widget _buildDefaultUI(double width) {
     return MaterialApp(
+      
       theme: ThemeData(
-        primaryColor: pink,
+        primarySwatch: Colors.pink,
+        
       ),
       debugShowCheckedModeBanner: false,
       home: SafeArea(
@@ -101,96 +103,16 @@ class _CreateUserState extends State<CreateUser>
                   child: Column(
                     children: [
                       Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: TextField(
-                          controller: email,
-                          decoration: InputDecoration(
-                            prefixIcon: Icon(
-                              Icons.email,
-                              color: pink,
-                            ),
-                            labelText: 'email',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide(
-                                color: pink,
-                                width: 2,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide(
-                                color: blue,
-                                width: 4,
-                              ),
-                            ),
-                          ),
-                        ),
+                        padding: const EdgeInsets.all(4),
+                        child: textField(icon: Icon(Icons.email), controller: email, label: 'email')
                       ),
                       Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: TextField(
-                          obscureText: true,
-                          controller: password,
-                          decoration: InputDecoration(
-                            prefixIcon: Icon(
-                              Icons.lock,
-                              color: pink,
-                            ),
-                            labelText: 'password',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide(
-                                color: pink,
-                                width: 2,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide(
-                                color: blue,
-                                width: 4,
-                              ),
-                            ),
-                          ),
-                        ),
+                        padding: const EdgeInsets.all(4),
+                        child: textField(icon: Icon(Icons.lock), controller: password, label: 'password')
                       ),
                       Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: TextField(
-                          
-                          controller: user_name,
-                          decoration: InputDecoration(
-                            prefixIcon: Icon(
-                              Icons.person,
-                              color: pink,
-                            ),
-                            labelText: 'User Name',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide(
-                                color: pink,
-                                width: 2,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide(
-                                color: blue,
-                                width: 4,
-                              ),
-                            ),
-                          ),
-                        ),
+                        padding: const EdgeInsets.all(4),
+                        child: textField(icon: Icon(Icons.person), controller: user_name, label: 'user name')
                       ),
                       SizedBox(height: 20),
                       ElevatedButton(
