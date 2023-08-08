@@ -102,15 +102,22 @@ Widget messageLine(
 
 class textField extends StatelessWidget {
   textField(
-      {required this.icon, required this.controller, required this.label});
+      {required this.icon,
+      required this.controller,
+      required this.label,
+      this.onchanged});
   Icon icon;
   TextEditingController controller;
   String label;
+  Function? onchanged;
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: TextField(
+        onChanged: (value) {
+          onchanged;
+        },
         controller: controller,
         decoration: InputDecoration(
           prefixIcon: icon,
@@ -137,3 +144,65 @@ class textField extends StatelessWidget {
     );
   }
 }
+
+class friendInvitation extends StatelessWidget {
+  friendInvitation({
+    this.profilePicture,
+    required this.userName,
+    required this.exist,
+    required this.accepted,
+  });
+
+  final AssetImage? profilePicture;
+  final String userName;
+  final bool exist;
+  final bool? accepted;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.all(Radius.circular(10)),
+          color: white,
+        ),
+        height: 70,
+        width: 200,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                SizedBox(
+                  width: 10,
+                ),
+                profilePicture == null
+                    ? Image(image: AssetImage('images/avatar.png'))
+                    : Image(image: profilePicture!),
+                SizedBox(
+                  width: 10,
+                ),
+                Text(userName),
+              ],
+            ),
+            Row(
+              children: [
+                !exist
+                    ? IconButton(
+                        onPressed: () {},
+                        icon: Icon(Icons.send, color: pink),
+                      )
+                    : (accepted!
+                        ? Icon(Icons.check)
+                        : Icon(Icons.access_alarm)),
+                 SizedBox(width:5 ,),
+              ],
+            )        
+          ],
+        ),
+      ),
+    );
+  }
+}
+
