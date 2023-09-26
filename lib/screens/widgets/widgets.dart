@@ -101,23 +101,20 @@ Widget messageLine(
 }
 
 class textField extends StatelessWidget {
-  textField(
-      {required this.icon,
-      required this.controller,
-      required this.label,
-      this.onchanged});
+  textField({
+    required this.icon,
+    required this.controller,
+    required this.label,
+  });
   Icon icon;
   TextEditingController controller;
   String label;
-  Function? onchanged;
+
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: TextField(
-        onChanged: (value) {
-          onchanged;
-        },
         controller: controller,
         decoration: InputDecoration(
           prefixIcon: icon,
@@ -149,15 +146,14 @@ class friendInvitation extends StatelessWidget {
   friendInvitation({
     this.profilePicture,
     required this.userName,
-    required this.exist,
-    required this.accepted,
+    this.exist,
+    this.accepted
   });
 
   final AssetImage? profilePicture;
   final String userName;
-  final bool exist;
+  final bool? exist;
   final bool? accepted;
-
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -184,25 +180,12 @@ class friendInvitation extends StatelessWidget {
                   width: 10,
                 ),
                 Text(userName),
+                exist==true ? Icon(Icons.person):(accepted==true ?Icon(Icons.lock_clock):Icon(Icons.send))                                   
               ],
             ),
-            Row(
-              children: [
-                !exist
-                    ? IconButton(
-                        onPressed: () {},
-                        icon: Icon(Icons.send, color: pink),
-                      )
-                    : (accepted!
-                        ? Icon(Icons.check)
-                        : Icon(Icons.access_alarm)),
-                 SizedBox(width:5 ,),
-              ],
-            )        
           ],
         ),
       ),
     );
   }
 }
-

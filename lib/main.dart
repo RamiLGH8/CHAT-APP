@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
       initialRoute: _auth.currentUser != null ? '/chat' : '/welcomeScreen',
       routes: {
         '/welcomeScreen': (context) => welcome(),
-        '/chat': (context) => findFriend(),
+        '/chat': (context) => FindFriend(),
       },
       debugShowCheckedModeBanner: false, // set to false to remove debug banner
      

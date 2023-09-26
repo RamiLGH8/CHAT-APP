@@ -1,30 +1,41 @@
-import 'package:chat_app/screens/widgets/styles.dart';
-import 'package:chat_app/screens/widgets/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 
-class findFriend extends StatefulWidget {
-  const findFriend({Key? key}) : super(key: key);
+class FindFriend extends StatefulWidget {
+  const FindFriend({Key? key}) : super(key: key);
 
   @override
-  _findFriendState createState() => _findFriendState();
+  _FindFriendState createState() => _FindFriendState();
 }
 
-class _findFriendState extends State<findFriend> {
+class _FindFriendState extends State<FindFriend> {
   TextEditingController controller = TextEditingController();
   final _auth = FirebaseAuth.instance;
   final _firestore = FirebaseFirestore.instance;
+  final sendButton = Icon(Icons.send);
+  final friend = Icon(Icons.check_circle);
+  final waitingResonse = Icon( Icons.timer, );
+  String searchName = "";
+  
+
+Future<bool> doesDocumentExist(String collectionName, String documentId) async {
+  try {
+    final DocumentSnapshot documentSnapshot =
+        await _firestore.collection('User data').doc(_auth.currentUser!.email).collection(collectionName).doc(documentId).get();
+    return documentSnapshot.exists;
+  } catch (e) {
+    print('Error checking document existence: $e');
+    return false;
+  }
+}
 
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.pink,
-      ),
+      // ... (your MaterialApp configuration)
       home: SafeArea(
         child: Scaffold(
           body: Padding(
@@ -36,28 +47,73 @@ class _findFriendState extends State<findFriend> {
                   Text(
                     'Find New Friends Now!',
                     style: TextStyle(
-                        fontFamily: 'Rubik', fontSize: 30, color: grey),
+                        fontFamily: 'Rubik', fontSize: 30, color: Colors.grey),
                   ),
                   Center(
-                    child: textField(
-                        icon: Icon(Icons.search),
-                        controller: controller,
-                        label: 'Find your friend'),
+                    child: TextField(
+                      decoration: InputDecoration(
+                        prefixIcon: Icon(Icons.search),
+                        labelText: 'Find your friend',
+                      ),
+                      controller: controller,
+                      onChanged: (value) {
+                        setState(() {
+                          searchName = value;
+                        });
+                      },
+                    ),
                   ),
                   Flexible(
                     child: SingleChildScrollView(
                       child: StreamBuilder<QuerySnapshot>(
-                          stream: _firestore
-                              .collection('User data')
-                              .orderBy('email')
-                              .snapshots(),
-                          builder: (context, snapshot) {
+                        stream: _firestore
+                            .collection('User data')
+                            .where('user name',
+                                isGreaterThanOrEqualTo: searchName)
+                            .where('user name', isLessThan: searchName + 'z')
+                            .orderBy('user name')
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            final users = snapshot.data!.docs;
+
+                            List<Widget> userWidgets = [];
+
+                            for (var user in users) {
+                              final userName = user['user name'];
+                              final userEmail = user['email'];
+
+                              userWidgets.add(
+                                ListTile(
+                                  leading: CircleAvatar(
+                                    backgroundImage:
+                                        AssetImage('images/avatar.png'),
+                                  ),
+                                  title: Text(userName),
+                                  subtitle: Text(userEmail),
+                                  trailing: IconButton(
+                                      icon: doesDocumentExist('friends', userEmail)==false?sendButton:friend, onPressed: () {}),
+                                  // Add functionality to add the user as a friend
+                                  onTap: () {
+                                    Map<String, dynamic> friendRequest = {
+                                      'accepted': false,
+                                      'sender': userEmail
+                                    };
+                                    _firestore
+                                        .collection('Friends Requests')
+                                        .doc(userEmail)
+                                        .set(friendRequest);
+                                  },
+                                ),
+                              );
+                            }
+
                             return Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Container(
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
-                                    colors: [Colors.pink, pink],
+                                    colors: [Colors.pink, Colors.pinkAccent],
                                     begin: Alignment.topCenter,
                                     end: Alignment.bottomCenter,
                                   ),
@@ -67,70 +123,16 @@ class _findFriendState extends State<findFriend> {
                                 height: height * 0.75,
                                 child: Padding(
                                   padding: const EdgeInsets.all(20.0),
-                                  child: StreamBuilder<QuerySnapshot>(
-                                      stream: _firestore
-                                          .collection('Friend Requests')
-                                          .snapshots(),
-                                      builder: (context, request) {
-                                        List<friendInvitation>
-                                            recommendedFriendsList = [];
-                                        bool exist;
-                                        bool? accepted;
-                                        if (snapshot.hasData) {
-                                          final recomendedFriends = snapshot
-                                              .data!.docs!
-                                              .where((element) => element
-                                                  .get('user name')
-                                                  .toLowerCase()
-                                                  .contains(controller.text
-                                                      .toLowerCase()));
-                                          if (request.hasData) {
-                                            final requests =
-                                                request.data!.docs!;
-                                            if (controller.text.isNotEmpty) {
-                                              for (var recommendedFriend
-                                                  in recomendedFriends) {
-                                                final recommendedName =
-                                                    recommendedFriend
-                                                        .get('user name');
-                                                if (requests.contains(
-                                                    recommendedFriend.id)) {
-                                                  exist = true;
-                                                  final friendRequested =
-                                                      (requests.where((element) =>
-                                                              element.id ==
-                                                              recommendedFriend
-                                                                  .id))
-                                                          .first
-                                                          .get('accepted');
-                                                  if (friendRequested == true) {
-                                                    accepted = true;
-                                                  } else {
-                                                    accepted = false;
-                                                  }
-                                                } else {
-                                                  exist = false;
-                                                }
-                                                final recommended =
-                                                    friendInvitation(
-                                                        userName:
-                                                            recommendedName,
-                                                        exist: exist,
-                                                        accepted: accepted);
-                                                recommendedFriendsList
-                                                    .add(recommended);
-                                              }
-                                            }
-                                          }
-                                        }
-                                        return ListView(
-                                          children: recommendedFriendsList,
-                                        );
-                                      }),
+                                  child: ListView(
+                                    children: userWidgets,
+                                  ),
                                 ),
                               ),
                             );
-                          }),
+                          }
+                          return CircularProgressIndicator();
+                        },
+                      ),
                     ),
                   ),
                 ],
