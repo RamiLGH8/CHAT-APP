@@ -15,27 +15,31 @@ class _FindFriendState extends State<FindFriend> {
   final _firestore = FirebaseFirestore.instance;
   final sendButton = Icon(Icons.send);
   final friend = Icon(Icons.check_circle);
-  final waitingResonse = Icon( Icons.timer, );
   String searchName = "";
-  
-
-Future<bool> doesDocumentExist(String collectionName, String documentId) async {
-  try {
-    final DocumentSnapshot documentSnapshot =
-        await _firestore.collection('User data').doc(_auth.currentUser!.email).collection(collectionName).doc(documentId).get();
-    return documentSnapshot.exists;
-  } catch (e) {
-    print('Error checking document existence: $e');
-    return false;
+  String? senderName;
+  Future<bool> doesDocumentExist(String documentId) async {
+    try {
+      final documentSnapshot = await FirebaseFirestore.instance
+          .collection('User data')
+          .doc(_auth.currentUser!.email)
+          .collection('friends')
+          .doc(documentId)
+          .get();
+      return documentSnapshot.exists;
+    } catch (e) {
+      return false;
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
     return MaterialApp(
-      // ... (your MaterialApp configuration)
+      theme: ThemeData(
+        primarySwatch: Colors.pink,
+      ),
+      debugShowCheckedModeBanner: false,
       home: SafeArea(
         child: Scaffold(
           body: Padding(
@@ -50,17 +54,23 @@ Future<bool> doesDocumentExist(String collectionName, String documentId) async {
                         fontFamily: 'Rubik', fontSize: 30, color: Colors.grey),
                   ),
                   Center(
-                    child: TextField(
-                      decoration: InputDecoration(
-                        prefixIcon: Icon(Icons.search),
-                        labelText: 'Find your friend',
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: TextFormField(
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          prefixIcon: Icon(Icons.search),
+                          labelText: 'Find your friend',
+                        ),
+                        controller: controller,
+                        onChanged: (value) {
+                          setState(() {
+                            searchName = value;
+                          });
+                        },
                       ),
-                      controller: controller,
-                      onChanged: (value) {
-                        setState(() {
-                          searchName = value;
-                        });
-                      },
                     ),
                   ),
                   Flexible(
@@ -74,40 +84,60 @@ Future<bool> doesDocumentExist(String collectionName, String documentId) async {
                             .orderBy('user name')
                             .snapshots(),
                         builder: (context, snapshot) {
+
                           if (snapshot.hasData) {
                             final users = snapshot.data!.docs;
 
                             List<Widget> userWidgets = [];
+                            
+                            for (var user in users) {                           
+                              if (user['email'] == _auth.currentUser!.email) {
+                                senderName = user['user name'];
+                              }
+                              if (user['email'] != _auth.currentUser!.email) {
+                                final userName = user['user name'];
+                                final userEmail = user['email'];
 
-                            for (var user in users) {
-                              final userName = user['user name'];
-                              final userEmail = user['email'];
+                                userWidgets.add(
+                                  ListTile(
+                                    leading: CircleAvatar(
+                                      backgroundImage:
+                                          AssetImage('images/avatar.png'),
+                                    ),
+                                    title: Text(userName),
+                                    subtitle: Text(userEmail),
+                                    onTap: () async {
+                                      bool userExists =
+                                          await doesDocumentExist(userEmail);
 
-                              userWidgets.add(
-                                ListTile(
-                                  leading: CircleAvatar(
-                                    backgroundImage:
-                                        AssetImage('images/avatar.png'),
+                                      if (!userExists) {
+                                        Map<String, dynamic> friendRequest = {
+                                          'accepted': false,
+                                          'sender email':
+                                              _auth.currentUser!.email,
+                                          'sender name': senderName!,
+                                        };
+                                        await _firestore
+                                            .collection('Friends Requests')
+                                            .doc(userEmail)
+                                            .set(friendRequest);
+                                      }
+                                    },
+                                    trailing: StreamBuilder<bool>(
+                                      stream: doesDocumentExist(userEmail)
+                                          .asStream(),
+                                      builder: (context, snapshot) {
+                                        if (snapshot.data == true) {
+                                          return friend;
+                                        } else {
+                                          return sendButton;
+                                        }
+                                      },
+                                    ),
                                   ),
-                                  title: Text(userName),
-                                  subtitle: Text(userEmail),
-                                  trailing: IconButton(
-                                      icon: doesDocumentExist('friends', userEmail)==false?sendButton:friend, onPressed: () {}),
-                                  // Add functionality to add the user as a friend
-                                  onTap: () {
-                                    Map<String, dynamic> friendRequest = {
-                                      'accepted': false,
-                                      'sender': userEmail
-                                    };
-                                    _firestore
-                                        .collection('Friends Requests')
-                                        .doc(userEmail)
-                                        .set(friendRequest);
-                                  },
-                                ),
-                              );
+                                );
+                              }
                             }
-
                             return Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Container(
@@ -130,7 +160,7 @@ Future<bool> doesDocumentExist(String collectionName, String documentId) async {
                               ),
                             );
                           }
-                          return CircularProgressIndicator();
+                          return Center(child: CircularProgressIndicator());
                         },
                       ),
                     ),

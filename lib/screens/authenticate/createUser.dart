@@ -52,7 +52,7 @@ class _CreateUserState extends State<CreateUser>
       context,
       MaterialPageRoute(
           builder: (context) =>
-              chat_screen()), // Use PascalCase for class names
+              ChatScreen()), // Use PascalCase for class names
     );
   }
 

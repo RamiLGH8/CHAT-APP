@@ -1,58 +1,57 @@
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:chat_app/screens/authenticate/signIn.dart';
-import 'package:chat_app/screens/home/friend_chat_screen.dart';
 import 'package:chat_app/screens/widgets/widgets.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/styles.dart';
 
 String? friendMessage;
 late User signedUser;
 
-class chat_screen extends StatefulWidget {
+class ChatScreen extends StatefulWidget {
   @override
-  State<chat_screen> createState() => _chat_screenState();
+  State<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _chat_screenState extends State<chat_screen> {
+class _ChatScreenState extends State<ChatScreen> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  int selectedPage = 0;
+
+  void getCurrentFriend(String friendName) {
+    try {
+      friendMessage = friendName;
+      print(friendMessage);
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  void getCurrentUser() {
+    try {
+      final user = _auth.currentUser;
+      if (user != null) signedUser = user;
+      print(signedUser.email);
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getCurrentUser();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final _auth = FirebaseAuth.instance;
-    final _firestore = FirebaseFirestore.instance;
-
-    void getCurrentFriend(String friendName) {
-      try {
-        friendMessage = friendName;
-        print(friendMessage);
-      } catch (e) {
-        print(e);
-      }
-    }
-
-    void getCurrentUser() {
-      try {
-        final user = _auth.currentUser;
-        if (user != null) signedUser = user;
-        print(signedUser.email);
-      } catch (e) {
-        print(e);
-      }
-    }
-
-    @override
-    void initState() {
-      // TODO: implement initState
-      super.initState();
-      getCurrentUser();
-    }
-
     return MaterialApp(
       theme: ThemeData(
         primarySwatch: Colors.pink,
       ),
-      debugShowCheckedModeBanner: false, // set to false to remove debug banner
+      debugShowCheckedModeBanner: false,
       home: SafeArea(
         child: Scaffold(
           appBar: AppBar(
@@ -90,6 +89,7 @@ class _chat_screenState extends State<chat_screen> {
               ),
             ],
           ),
+          bottomNavigationBar: bottomNavBar(selectedPage: selectedPage, context: context),
           body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
             stream: _firestore
                 .collection('User data')
@@ -136,35 +136,67 @@ class _chat_screenState extends State<chat_screen> {
                         return SizedBox.shrink();
                       }
 
-                      final friendsWidgets = <Widget>[];
+                      List<Widget> friendsWidgets = [];
                       if (messageSnapshots.hasData) {
-                        final lastMessage = messageSnapshots.data!.docs.last;
-                        final lastMessageValue = lastMessage.get('message');
-                        final lastMessageSender = lastMessage.get('sender');
-                        final lastMessageTime =
-                            lastMessage.get('time') as Timestamp?;
-                        final formattedTime = lastMessageTime != null
-                            ? DateFormat.yMd()
-                                .add_jm()
-                                .format(lastMessageTime.toDate())
-                            : "N/A";
+                        // Check if the 'messages' collection exists
+                        if (messageSnapshots.data!.docs.isNotEmpty) {
+                          final lastMessage = messageSnapshots.data!.docs.last;
+                          final lastMessageValue = lastMessage.get('message');
+                          final lastMessageSender = lastMessage.get('sender');
+                          final lastMessageTime =
+                              lastMessage.get('time') as Timestamp?;
+                          final formattedTime = lastMessageTime != null
+                              ? DateFormat.yMd()
+                                  .add_jm()
+                                  .format(lastMessageTime.toDate())
+                              : "N/A";
+                          final friendName = friendNameList[index];
+                          final friendEmail = friendsIdList[index];
+
+                          final friendWidget = friendCard(
+                            friendName,
+                            friendEmail,
+                            lastMessageSender,
+                            lastMessageValue,
+                            formattedTime,
+                            context,
+                          );
+
+                          friendsWidgets.add(friendWidget);
+                        } else {
+                          // Display a placeholder or a message for friends with no messages
+                          final friendName = friendNameList[index];
+                          final friendEmail = friendsIdList[index];
+
+                          final friendWidget = friendCard(
+                            friendName,
+                            friendEmail,
+                            null,
+                            "No messages yet", // Placeholder message
+                            "N/A",
+                            context,
+                          );
+
+                          friendsWidgets.add(friendWidget);
+                        }
+                      } else {
+                        // Handle the case where the 'messages' collection doesn't exist
                         final friendName = friendNameList[index];
                         final friendEmail = friendsIdList[index];
+
+                        // Display a placeholder or a message for friends with no messages
                         final friendWidget = friendCard(
                           friendName,
                           friendEmail,
-                          lastMessageSender,
-                          lastMessageValue,
-                          formattedTime,
-
+                          null,
+                          "No messages yet", // Placeholder message
+                          "N/A",
                           context,
                         );
+
                         friendsWidgets.add(friendWidget);
                       }
-
-                      return Column(
-                        children: friendsWidgets,
-                      );
+                      return Column(children: friendsWidgets);
                     },
                   );
                 },

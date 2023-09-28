@@ -82,7 +82,7 @@ class _friend_chat_screenState extends State<friend_chat_screen> {
                   Navigator.pop(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => chat_screen(),
+                      builder: (context) => ChatScreen(),
                     ),
                   );
                 },
@@ -159,9 +159,9 @@ class _friend_chat_screenState extends State<friend_chat_screen> {
                       ),
                     ),
                     TextButton(
-                      onPressed: () {
+                      onPressed: () async{
                         getCurrentUser();
-                        FirebaseFirestore.instance
+                       await FirebaseFirestore.instance
                             .collection('User data')
                             .doc(signedUser.email)
                             .collection('friends')
@@ -173,7 +173,7 @@ class _friend_chat_screenState extends State<friend_chat_screen> {
                           'sender': signedUser.email,
                           'time': FieldValue.serverTimestamp()
                         });
-                        FirebaseFirestore.instance
+                       await FirebaseFirestore.instance
                             .collection('User data')
                             .doc(widget.friendEmail)
                             .collection('friends')

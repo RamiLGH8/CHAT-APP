@@ -60,7 +60,7 @@ class _SignInState extends State<SignIn> with SingleTickerProviderStateMixin {
       context,
       
       MaterialPageRoute(
-          builder: (context) => chat_screen(
+          builder: (context) => ChatScreen(
                 
               )),
     );

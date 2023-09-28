@@ -1,55 +1,43 @@
+import 'package:chat_app/screens/home/chat_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import '../widgets/styles.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import '../home/friend_chat_screen.dart';
 
-Widget friendCard(String name, String email, String lastMessageSender,
-    String lastMessage, String lastMessageTime, BuildContext context) {
+Widget friendCard(String name, String email, String? lastMessageSender,
+    String? lastMessage, String? lastMessageTime, BuildContext context) {
   return GestureDetector(
-      onTap: () {
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => friend_chat_screen(
-                      friendName: name,
-                      friendEmail: email,
-                    )) // Use PascalCase for class names
-            );
-      },
-      child: Padding(
+    onTap: () {
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => friend_chat_screen(
+                    friendName: name,
+                    friendEmail: email,
+                  )) // Use PascalCase for class names
+          );
+    },
+    child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(10),
           child: Container(
               color: pink,
-              height: 70,
-              child: Row(children: [
-                SizedBox(
-                  width: 5,
-                ),
-                CircleAvatar(
+              child: ListTile(
+                leading: CircleAvatar(
                   backgroundImage: AssetImage('images/avatar.png'),
                 ),
-                SizedBox(
-                  width: 10,
-                ),
-                Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(name),
-                      if (lastMessageSender == email) Text(lastMessage),
-                      if (lastMessageSender != email)
-                        Text('You:' + lastMessage),
-                    ]),
-                SizedBox(
-                  width: 60,
-                ),
-                Text(lastMessageTime),
-              ])),
-        ),
-      ));
+                title: Text(name),
+                subtitle: lastMessage == 'No messages yet'
+                    ? Text(lastMessage!)
+                    : (name == lastMessageSender
+                        ? Text('$lastMessageSender: $lastMessage')
+                        : Text('You: $lastMessage')),
+                trailing: Text(lastMessageTime == null ? '' : lastMessageTime),
+              )),
+        )),
+  );
 }
 
 class LoadingPage extends StatelessWidget {
@@ -142,50 +130,51 @@ class textField extends StatelessWidget {
   }
 }
 
-class friendInvitation extends StatelessWidget {
-  friendInvitation({
-    this.profilePicture,
-    required this.userName,
-    this.exist,
-    this.accepted
-  });
-
-  final AssetImage? profilePicture;
-  final String userName;
-  final bool? exist;
-  final bool? accepted;
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.circular(10)),
-          color: white,
-        ),
-        height: 70,
-        width: 200,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                SizedBox(
-                  width: 10,
-                ),
-                profilePicture == null
-                    ? Image(image: AssetImage('images/avatar.png'))
-                    : Image(image: profilePicture!),
-                SizedBox(
-                  width: 10,
-                ),
-                Text(userName),
-                exist==true ? Icon(Icons.person):(accepted==true ?Icon(Icons.lock_clock):Icon(Icons.send))                                   
-              ],
-            ),
-          ],
-        ),
+Widget bottomNavBar(
+    {required int selectedPage, required BuildContext context}) {
+  return BottomNavigationBar(
+    items: const <BottomNavigationBarItem>[
+      BottomNavigationBarItem(
+        icon: Icon(Icons.home),
+        label: 'Home',
+        backgroundColor: Colors.white,
       ),
-    );
-  }
+      BottomNavigationBarItem(
+        icon: Icon(Icons.search),
+        label: 'Search',
+        backgroundColor: Colors.white,
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.person),
+        label: 'Requests',
+        backgroundColor: Colors.white,
+      ),
+    ],
+    selectedItemColor: blue,
+    backgroundColor: pink,
+    currentIndex: selectedPage,
+    onTap: ((index) {
+      selectedPage = index;
+      switch (index) {
+        case 0:
+          // Navigator.popUntil(context, (route) => !route.isCurrent);
+          // Navigator.push(
+          //     context, MaterialPageRoute(builder: (context) => const Home()));
+
+          break;
+        case 1:
+          // Navigator.push(
+          //     context, MaterialPageRoute(builder: (context) => const Home()));
+          Navigator.pushNamed(context, '/chat');
+          break;
+        case 2:
+          // Navigator.push(
+          //     context, MaterialPageRoute(builder: (context) => const Home()));
+          
+          break;
+
+        default:
+      }
+    }),
+  );
 }
